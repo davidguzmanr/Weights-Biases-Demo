@@ -23,8 +23,7 @@ def get_dataloader(is_train, batch_size, slice=5):
     )
     sub_dataset = torch.utils.data.Subset(
         full_dataset, 
-        indices=range(0, len(full_dataset), 
-        slice)
+        indices=range(0, len(full_dataset), slice)
     )
     loader = torch.utils.data.DataLoader(
         dataset=sub_dataset, 
@@ -71,7 +70,7 @@ def validate_model(model, valid_dl, loss_func, log_images=False, batch_idx=0):
             correct += (predicted == labels).sum().item()
 
             # Log one batch of images to the dashboard, always same batch_idx.
-            if i==batch_idx and log_images:
+            if i == batch_idx and log_images:
                 log_image_table(images, predicted, labels, outputs.softmax(dim=1))
 
     return val_loss / len(valid_dl.dataset), correct / len(valid_dl.dataset)
@@ -80,9 +79,9 @@ def log_image_table(images, predicted, labels, probs):
     """
     Log a wandb.Table with (img, pred, target, scores)
     """
-    table = wandb.Table(columns=['image', 'pred', 'target']+[f'score_{i}' for i in range(10)])
+    table = wandb.Table(columns=['image', 'pred', 'target'] + [f'score_{i}' for i in range(10)])
     for img, pred, targ, prob in zip(images.to('cpu'), predicted.to('cpu'), labels.to('cpu'), probs.to('cpu')):
-        table.add_data(wandb.Image(img[0].numpy()*255), pred, targ, *prob.numpy())
+        table.add_data(wandb.Image(img[0].numpy() * 255), pred, targ, *prob.numpy())
         
     wandb.log({'predictions_table':table}, commit=False)
 
