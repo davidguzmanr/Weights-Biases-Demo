@@ -6,3 +6,4 @@ You can see the logs of the different experiments [here](https://wandb.ai/davidg
 ## References
 - [Weights & Biases documentation](https://docs.wandb.ai/)
 - [Quickstart](https://wandb.ai/quickstart)
+- [Data Science Experiments Management with Weights & Biases](https://wandb.ai/broutonlab/first_steps/reports/Data-Science-Experiments-Management-with-Weights-Biases---Vmlldzo2NjE3MDI)
