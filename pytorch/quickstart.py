@@ -85,69 +85,73 @@ def log_image_table(images, predicted, labels, probs):
         
     wandb.log({'predictions_table':table}, commit=False)
 
-# Launch 10 experiments, trying different dropout rates
-for i in range(10):
-    with wandb.init(
-        project='my-test-project',
-        entity='davidguzmanr',
-        group='PyTorch',
-        name=f'run-{i}',
-        config={
-            'epochs': 10,
-            'batch_size': 128,
-            'lr': 1e-3,
-            'dropout': random.uniform(0.01, 0.80),
-            }
-    ):
-        config = wandb.config
+def main():
+    # Launch 10 experiments, trying different dropout rates
+    for i in range(10):
+        with wandb.init(
+            project='my-test-project',
+            entity='davidguzmanr',
+            group='PyTorch',
+            name=f'run-{i}',
+            config={
+                'epochs': 10,
+                'batch_size': 128,
+                'lr': 1e-3,
+                'dropout': random.uniform(0.01, 0.80),
+                }
+        ):
+            config = wandb.config
 
-        # Get the data
-        train_dl = get_dataloader(is_train=True, batch_size=config.batch_size)
-        valid_dl = get_dataloader(is_train=False, batch_size=2*config.batch_size)
+            # Get the data
+            train_dl = get_dataloader(is_train=True, batch_size=config.batch_size)
+            valid_dl = get_dataloader(is_train=False, batch_size=2*config.batch_size)
 
-        # A simple MLP model
-        model = get_model(config.dropout)
+            # A simple MLP model
+            model = get_model(config.dropout)
 
-        # Make the loss and optimizer
-        loss_func = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
+            # Make the loss and optimizer
+            loss_func = nn.CrossEntropyLoss()
+            optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
 
-        # Training
-        example_ct = 0
-        for epoch in tqdm(range(config.epochs)):
-            model.train()
-            for images, labels in tqdm(train_dl, leave=False):
-                images, labels = images.to(device), labels.to(device)
-        
-                # Forward pass
-                outputs = model(images)
-                train_loss = loss_func(outputs, labels)
+            # Training
+            example_ct = 0
+            for epoch in tqdm(range(config.epochs)):
+                model.train()
+                for images, labels in tqdm(train_dl, leave=False):
+                    images, labels = images.to(device), labels.to(device)
+            
+                    # Forward pass
+                    outputs = model(images)
+                    train_loss = loss_func(outputs, labels)
 
-                # Backward pass
-                optimizer.zero_grad()
-                train_loss.backward()
+                    # Backward pass
+                    optimizer.zero_grad()
+                    train_loss.backward()
+                    
+                    # Step with optimizer
+                    optimizer.step()
+
+                    # Log training loss and epoch count
+                    example_ct += len(images)
+                    wandb.log({
+                        'train_loss': train_loss, 
+                        'epoch': example_ct/len(train_dl.dataset)
+                        }, 
+                        step=example_ct
+                    )
                 
-                # Step with optimizer
-                optimizer.step()
-
-                # Log training loss and epoch count
-                example_ct += len(images)
+                val_loss, accuracy = validate_model(model, valid_dl, loss_func, log_images=(epoch==(config.epochs-1)))
+                
+                # Log validation metrics
                 wandb.log({
-                    'train_loss': train_loss, 
-                    'epoch': example_ct/len(train_dl.dataset)
+                    'val_loss': val_loss, 
+                    'val_accuracy': accuracy
                     }, 
                     step=example_ct
                 )
-            
-            val_loss, accuracy = validate_model(model, valid_dl, loss_func, log_images=(epoch==(config.epochs-1)))
-            
-            # Log validation metrics
-            wandb.log({
-                'val_loss': val_loss, 
-                'val_accuracy': accuracy
-                }, 
-                step=example_ct
-            )
-            print(f'Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:3f}, accuracy: {accuracy:.2f}')
+                print(f'Train Loss: {train_loss:.3f}, Valid Loss: {val_loss:3f}, accuracy: {accuracy:.2f}')
 
-wandb.finish()
+    wandb.finish()
+
+if __name__ == '__main__':
+    main()

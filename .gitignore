@@ -7,8 +7,8 @@ __pycache__/
 *.so
 
 MNIST/
-
 wandb/
+pytorch-lightning/my-test-project
 
 # Distribution / packaging
 .Python
