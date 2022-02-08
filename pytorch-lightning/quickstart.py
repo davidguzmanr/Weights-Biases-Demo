@@ -156,7 +156,7 @@ def main():
         )
 
         model = Model(**config)
-        print(model)
+
         trainer.fit(model)
         wandb.finish()
 
